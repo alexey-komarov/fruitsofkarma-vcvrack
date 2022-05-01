@@ -27,7 +27,7 @@ Parameters:
 
 ### Quadro360
 
-![Quadro360](./doc/Quadro360.gif)
+![Quadro360](./doc/Quadro360.png)
 
 Quadro mixer with 8 inputs with rotation option
 
