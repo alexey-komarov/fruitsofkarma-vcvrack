@@ -1,8 +1,8 @@
 #include "plugin.hpp"
 
 const int PARTICLES_MAX = 5000;
-const int RADIUS_MAX = 100;
-const int halfsize = 199;
+const int RADIUS_MAX = 200;
+const int halfsize = 198;
 
 #define	PARAM_MAP(X)  \
 	X(AMOUNT)         \
@@ -100,14 +100,14 @@ struct ColoredGlass : Module {
 		configParam(ROTATE_PARAM,         -180.f,  180.f,         0.f,   "Angle of rotation");
 		configParam(EDGES_PARAM,             0.f,   10.f,         3.f,   "Number of edges");
 		configParam(ALPHA_PARAM,             0.f,  255.f,         60.f,  "Opacity");
-		configParam(DISTORT_PARAM,          -1.f,    1.f,         0.45f, "Amount of distortion");
+		configParam(DISTORT_PARAM,           0.f,   10.f,         0.45f, "Amount of distortion");
 		configParam(STROKE_PARAM,            0.f,   10.f,         1.7f,  "Stroke width");
 		configParam(RADIUS_PARAM,            0.f,  RADIUS_MAX,    9.f,   "Radius");
 		configParam(ROTATE_ALL_PARAM,     -180.f,  180.f,         0.f,   "Rotate all");
 		configParam(ROTATE_RAND_PARAM,       0.f,    1.f,         0.f,   "Angle of rotation randomness");
 		configParam(EDGES_RAND_PARAM,        0.f,    1.f,         0.6f,  "Number of edges randomess");
 		configParam(ALPHA_RAND_PARAM,        0.f,    1.f,         0.5f,  "Opacity randomness");
-		configParam(DISTORT_RAND_PARAM,      0.f,    1.f,         1.f,   "Amount of distortion randomness");
+		configParam(DISTORT_RAND_PARAM,      0.f,    5.f,         0.f,   "Amount of distortion randomness");
 		configParam(STROKE_RAND_PARAM,       0.f,    1.f,         0.f,   "Stroke width randomness");
 		configParam(RADIUS_RAND_PARAM,       0.f,    1.f,         1.f,   "Radius randomness");
 		configParam(ANGLE_PARAM,            -1.f,    1.f,         0.01f, "Rotation speed");
@@ -126,14 +126,14 @@ struct ColoredGlass : Module {
 		Settings.rotateRand  = inputs[ROTATE_RAND_INPUT].getVoltage()  / 10   + params[ROTATE_RAND_PARAM].getValue();
 		Settings.amount      = inputs[AMOUNT_INPUT].getVoltage()       + params[AMOUNT_PARAM].getValue();
 		Settings.distort     = inputs[DISTORT_INPUT].getVoltage()      / 10   + params[DISTORT_PARAM].getValue();
-		Settings.distortRand = inputs[DISTORT_RAND_INPUT].getVoltage() + params[DISTORT_RAND_PARAM].getValue();
+		Settings.distortRand = inputs[DISTORT_RAND_INPUT].getVoltage() / 2    + params[DISTORT_RAND_PARAM].getValue();
 		Settings.edges       = inputs[EDGES_INPUT].getVoltage()        + params[EDGES_PARAM].getValue();
 		Settings.edgesRand   = inputs[EDGES_RAND_INPUT].getVoltage()   + params[EDGES_RAND_PARAM].getValue();
 		Settings.alpha       = inputs[ALPHA_INPUT].getVoltage()        * 25.5 + params[ALPHA_PARAM].getValue();
 		Settings.alphaRand   = inputs[ALPHA_RAND_INPUT].getVoltage()   / 10   + params[ALPHA_RAND_PARAM].getValue();
 		Settings.stroke      = inputs[STROKE_INPUT].getVoltage()       + params[STROKE_PARAM].getValue();
 		Settings.strokeRand  = inputs[STROKE_RAND_INPUT].getVoltage()  + params[STROKE_RAND_PARAM].getValue();
-		Settings.radius      = inputs[RADIUS_INPUT].getVoltage()       * 20   + params[RADIUS_PARAM].getValue();
+		Settings.radius      = inputs[RADIUS_INPUT].getVoltage()       * 50   + params[RADIUS_PARAM].getValue();
 		Settings.radiusRand  = inputs[RADIUS_RAND_INPUT].getVoltage()  / 10   + params[RADIUS_RAND_PARAM].getValue();
 		Settings.centerX     = inputs[CENTERX_INPUT].getVoltage()      * 10   + params[CENTERX_PARAM].getValue();
 		Settings.centerY     = inputs[CENTERY_INPUT].getVoltage()      * 10   + params[CENTERY_PARAM].getValue();
@@ -185,7 +185,7 @@ void initParticles(void) {
 		Particles[i].y = 0;
 		Particles[i].inverted = 1;
 		Particles[i].vector = (double(rand() % 1000) / 1000) * PIX2;
-		Particles[i].radius = 1 + (rand() % 10);
+		Particles[i].radius = 1 + (rand() % 50);
 		Particles[i].width = rand() % 4;
 		Particles[i].angle = 0;
 		Particles[i].alpha = rand() % 256;
@@ -236,14 +236,17 @@ struct ColoredGlassGlWidget : OpenGlWidget {
 	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
 		angle = angle / 180 * NVG_PI;
 
-		int xx = fixCoord(x + radius * getCos(angle) * (1 - Settings.distort));
-		int yy = fixCoord(y + radius * getSin(angle) * (1 - Settings.distort)); 
+		double dr = Settings.distortRand;
+		double d = Settings.distort + 1;
+
+		int xx = fixCoord(x + radius * getCos(angle * (d / (dr + (1 / (dr + 1))))));
+		int yy = fixCoord(y + radius * getSin(angle * d)); 
 
 		nvgMoveTo(args.vg, xx, yy);
 
 		for (int i = 1; i < edges; i++) {
-			int nx = fixCoord(x + radius * getCos(i * PIX2 / edges + angle) * (1 - Settings.distort));
-			int ny = fixCoord(y + radius * getSin(i * PIX2 / edges + angle) * (1 - Settings.distort));
+			int nx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dr + (1 / (dr + 1))))));
+			int ny = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d));
 			nvgLineTo(args.vg, nx, ny);
 		}
 
