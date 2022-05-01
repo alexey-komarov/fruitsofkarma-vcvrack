@@ -13,6 +13,11 @@
   "donateUrl": "",
   "modules": [
     {
+      "slug": "Quadro360",
+      "name": "Quadro360",
+      "description": "Quadro mixer with 8 inputs/4 outputs with rotation control",
+      "tags": ["Mixer", "Quad"]
+    }, {
       "slug": "ColoredGlass",
       "name": "Colored Glass",
       "description": "Simple particles effect",
