@@ -1,4 +1,5 @@
 #include "rack.hpp"
+#include "sintable.hpp"
 
 using namespace rack;
 

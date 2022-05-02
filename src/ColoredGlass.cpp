@@ -145,24 +145,7 @@ struct ColoredGlass : Module {
 };
 
 const double PIX2 = M_PI * 2;
-const int sinsize = int(PIX2 * 1000)+2;
-
 int colorshift = 0;
-double sins[sinsize];
-
-double getSin(double i) {
-	int idx = int(i * 1000) % sinsize;
-
-	if (idx < 0) {
-		idx = sinsize + idx;
-	}
-
-	return sins[idx];
-}
-
-double getCos(double i) {
-	return getSin(i + M_PI_2);
-}
 
 void setColors(int shift) {
 	for (int i = 0; i < Settings.amount; i++) {
@@ -176,10 +159,6 @@ void setColors(int shift) {
 }
 
 void initParticles(void) {
-	for (int i = 0; i < sinsize; i++) {
-		sins[i] = sin(double(i) / 1000);
-	}
-
 	for (int i = 0; i < PARTICLES_MAX; i++) {
 		Particles[i].x = 0;
 		Particles[i].y = 0;
