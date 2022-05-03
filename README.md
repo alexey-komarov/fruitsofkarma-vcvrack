@@ -30,7 +30,7 @@ Set of basic math operations
 
 ## BrokenGlass
 
-![BrokenGlass](./doc/BrokenGlass.gif)
+![ColoredGlass](./doc/ColoredGlass.gif)
 
 Particle visualiser
 
