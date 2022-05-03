@@ -21,8 +21,9 @@
       "slug": "PowVCO",
       "name": "PowVCO",
       "description": "Generates signal using x=y^n",
-      "tags": ["Oscillator", "Envelope generator"]
-    }, {      "slug": "ColoredGlass",
+      "tags": ["Oscillator", "Envelope generator", "Polyphonic"]
+    }, {
+      "slug": "ColoredGlass",
       "name": "Colored Glass",
       "description": "Simple particles effect",
       "tags": ["Visual"]
@@ -30,7 +31,7 @@
       "slug": "Math",
       "name": "Math",
       "description": "Basic math operations",
-      "tags": ["Envelope generator"]
+      "tags": ["Envelope generator", "Polyphonic"]
     }
   ]
 }
