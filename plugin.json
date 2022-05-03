@@ -16,9 +16,13 @@
       "slug": "Quadro360",
       "name": "Quadro360",
       "description": "Quadro mixer with 8 inputs/4 outputs with rotation control",
-      "tags": ["Mixer", "Quad"]
+      "tags": ["Mixer", "Quad", "Panning"]
     }, {
-      "slug": "ColoredGlass",
+      "slug": "PowVCO",
+      "name": "PowVCO",
+      "description": "Generates signal using x=y^n",
+      "tags": ["Oscillator", "Envelope generator"]
+    }, {      "slug": "ColoredGlass",
       "name": "Colored Glass",
       "description": "Simple particles effect",
       "tags": ["Visual"]
