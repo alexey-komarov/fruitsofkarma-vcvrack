@@ -26,6 +26,11 @@
       "name": "Colored Glass",
       "description": "Simple particles effect",
       "tags": ["Visual"]
+    }, {
+      "slug": "Math",
+      "name": "Math",
+      "description": "Basic math operations",
+      "tags": ["Envelope generator"]
     }
   ]
 }

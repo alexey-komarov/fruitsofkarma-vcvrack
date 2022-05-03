@@ -24,6 +24,10 @@ Parameters:
 - Radius In: radius of the input circle
 - Radius Out: radius of the output circle
 
+![Math](./doc/Math.jpg)
+
+Set of basic math operations
+
 ## BrokenGlass
 
 ![BrokenGlass](./doc/BrokenGlass.gif)
