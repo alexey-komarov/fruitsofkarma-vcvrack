@@ -46,7 +46,6 @@ struct Quadro360 : Module {
 
 		for (int i = 0; i < 128; i++) {
 			for (int j = 0; j < 128; j++) {
-				printf("%d, %f\n", i * i + j * j, sqrt(i * i + j * j));
 				sqrts[0] = sqrt(i * i + j * j);
 			}
 		}
@@ -64,46 +63,51 @@ struct Quadro360 : Module {
 		return res;
 	}
 
-	int colorshift = 0;
-
 	void process(const ProcessArgs& args) override {
-		float shift = (inputs[ANGLE_INPUT].getVoltage() * 18 + params[ANGLE_PARAM].getValue()) / 180 * M_PI;
-		float radiusIn = std::fmax(((inputs[RADIUS_IN_INPUT].getVoltage()) / 0.1 + params[RADIUS_IN_PARAM].getValue()) / 100, 0.f);
-		float radiusOut = std::fmax(((inputs[RADIUS_OUT_INPUT].getVoltage()) / 0.1 + params[RADIUS_OUT_PARAM].getValue()) / 100, 0.f);
-
-		float out00 = 0;
-		float out10 = 0;
-		float out01 = 0;
-		float out11 = 0;
-
-		InputIds inps[] = {
-			IN1_INPUT, IN2_INPUT, IN3_INPUT, IN4_INPUT,
-			IN5_INPUT, IN6_INPUT, IN7_INPUT, IN8_INPUT
-		};
+		float out00[PORT_MAX_CHANNELS] = {};
+		float out10[PORT_MAX_CHANNELS] = {};
+		float out01[PORT_MAX_CHANNELS] = {};
+		float out11[PORT_MAX_CHANNELS] = {};
+		int outChans = 0;
 
 		for (int i = 0; i < 8; i++) {
-			float i2 = i;
-			float x = getSin(i2 * 0.785 + shift) * 64 * radiusIn;
-			float y = getCos(i2 * 0.785 + shift) * 64 * radiusIn;
+			if (inputs[IN1_INPUT + i].isConnected()) {
+				int chans = inputs[IN1_INPUT + i].getChannels();
+				outChans = std::max(chans, outChans);
 
-			float v = inputs[inps[i]].getVoltage();
+				for (int c = 0; c < chans; c++) {
+					float shift = (inputs[ANGLE_INPUT].getVoltage(c) * 18 + params[ANGLE_PARAM].getValue()) / 180 * M_PI;
+					float radiusIn = std::fmax(((inputs[RADIUS_IN_INPUT].getVoltage(c)) / 0.1 + params[RADIUS_IN_PARAM].getValue()) / 100, 0.f);
+					float radiusOut = std::fmax(((inputs[RADIUS_OUT_INPUT].getVoltage(c)) / 0.1 + params[RADIUS_OUT_PARAM].getValue()) / 100, 0.f);
+					float x = getSin(i * 0.785f + shift) * 64 * radiusIn;
+					float y = getCos(i * 0.785f + shift) * 64 * radiusIn;
+					float v = inputs[IN1_INPUT + i].getVoltage(c);
 
-			float d00 = v * (128 - measureDistance(-64 * radiusOut, -64 * radiusOut, x, y)) / 128;
-			float d10 = v * (128 - measureDistance( 64 * radiusOut, -64 * radiusOut, x, y)) / 128;
-			float d01 = v * (128 - measureDistance(-64 * radiusOut,  64 * radiusOut, x, y)) / 128;
-			float d11 = v * (128 - measureDistance( 64 * radiusOut,  64 * radiusOut, x, y)) / 128;
+					float d00 = v * (128 - measureDistance(-64 * radiusOut, -64 * radiusOut, x, y)) / 128;
+					float d10 = v * (128 - measureDistance( 64 * radiusOut, -64 * radiusOut, x, y)) / 128;
+					float d01 = v * (128 - measureDistance(-64 * radiusOut,  64 * radiusOut, x, y)) / 128;
+					float d11 = v * (128 - measureDistance( 64 * radiusOut,  64 * radiusOut, x, y)) / 128;
 
-			out00 += d00;
-			out10 += d10;
-			out01 += d01;
-			out11 += d11;
+					out00[c] += d00;
+					out10[c] += d10;
+					out01[c] += d01;
+					out11[c] += d11;
+				}
+			}
 		}
 
-		outputs[OUT00_OUTPUT].setVoltage(out00);
-		outputs[OUT10_OUTPUT].setVoltage(out10);
-		outputs[OUT01_OUTPUT].setVoltage(out01);
-		outputs[OUT11_OUTPUT].setVoltage(out11);
-	} 
+		outputs[OUT00_OUTPUT].setChannels(outChans);
+		outputs[OUT10_OUTPUT].setChannels(outChans);
+		outputs[OUT01_OUTPUT].setChannels(outChans);
+		outputs[OUT11_OUTPUT].setChannels(outChans);
+
+		for (int c = 0; c < outChans; c++) {
+			outputs[OUT00_OUTPUT].setVoltage(out00[c], c);
+			outputs[OUT10_OUTPUT].setVoltage(out10[c], c);
+			outputs[OUT01_OUTPUT].setVoltage(out01[c], c);
+			outputs[OUT11_OUTPUT].setVoltage(out11[c], c);
+		}
+	}
 };
 
 struct Quadro360Widget : ModuleWidget {
