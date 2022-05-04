@@ -269,7 +269,7 @@ struct ColoredGlassGlWidget : OpenGlWidget {
 struct ColoredGlassWidget : ModuleWidget {
 	ColoredGlassWidget(ColoredGlass* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ColoredGlass.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ColoredGl.svg")));
 		const int xp = 47;
 		const int xi = 15;
 		const int yp = 32;
