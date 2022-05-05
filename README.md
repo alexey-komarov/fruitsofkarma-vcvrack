@@ -24,9 +24,12 @@ Parameters:
 - Radius In: radius of the input circle
 - Radius Out: radius of the output circle
 
+## Math
+
 ![Math](./doc/Math.jpg)
 
 Set of basic math operations
+You have 3 div operators, 3 mul operators, 3 pow operators and two ln, log2 and log10 functions.
 
 ## BrokenGlass
 
