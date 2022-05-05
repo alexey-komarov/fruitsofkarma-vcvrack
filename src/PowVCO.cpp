@@ -229,8 +229,6 @@ struct PowVCODisplay : ModuleLightWidget {
 };
 
 struct PowVCOWidget : ModuleWidget {
-	TransparentWidget *display;
-
 	PowVCOWidget(PowVCO* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/PowVCO.svg")));
@@ -241,7 +239,6 @@ struct PowVCOWidget : ModuleWidget {
 			display->box.pos = Vec(1, 22);
 			display->box.size = Vec(147, 50);
 			addChild(display);
-			this->display = display;
 		}
 
 		addParam(createParam<RoundHugeBlackKnob>(Vec(9, 83), module, PowVCO::FREQ_PARAM));

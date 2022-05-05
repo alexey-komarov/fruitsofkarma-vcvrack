@@ -205,8 +205,8 @@ void tick(void) {
 	}
 }
 
-struct ColoredGlassGlWidget : OpenGlWidget {
-	ColoredGlass *module = new ColoredGlass();
+struct ColoredGlassGlWidget : ModuleLightWidget {
+	ColoredGlass *module;
 
 	int fixCoord(int c) {
 		return std::min(std::max(c, 0), halfsize << 1);
@@ -233,6 +233,12 @@ struct ColoredGlassGlWidget : OpenGlWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		if (module == NULL) {
+			return;
+		}
+
+		nvgScissor(args.vg, 0, 0, 375, 378);
+
 		for (int i = 0; i < Settings.amount; i++) {
 			nvgBeginPath(args.vg);
 			TParticle p = Particles[i];
@@ -298,7 +304,7 @@ struct ColoredGlassWidget : ModuleWidget {
 			ColoredGlassGlWidget *display = new ColoredGlassGlWidget();
 			display->module = module;
 			display->setSize(Vec(400, 400));
-			display->setPosition(Vec(434, 2));
+			display->setPosition(Vec(434, 1));
 			addChild(display);
 		}
 	}
