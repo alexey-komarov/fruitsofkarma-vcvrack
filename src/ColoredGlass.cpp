@@ -233,10 +233,8 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		nvgLineTo(args.vg, xx, yy);
 	}
 
-	void draw(const DrawArgs &args) override {
-		if (module == NULL) {
-			return;
-		}
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (!module || layer != 1) return;
 
 		nvgMiterLimit(args.vg, 0);
 
@@ -270,6 +268,7 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		}
 
 		tick();
+		Widget::drawLayer(args, layer);
 	}
 };
 
