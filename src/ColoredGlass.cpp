@@ -229,8 +229,8 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		int maxx = xx;
 		int maxy = yy;
 
-		int xs[edges] = {};
-		int ys[edges] = {};
+		int xs[edges];
+		int ys[edges];
 		xs[0] = xx;
 		ys[0] = yy;
 
