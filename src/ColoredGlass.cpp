@@ -16,7 +16,7 @@ const int halfsize = 198;
 	X(ROTATE_RAND)    \
 	X(EDGES_RAND)     \
 	X(ALPHA_RAND)     \
-	X(DISTORT_RAND)   \
+	X(DISTORT_MORE)   \
 	X(STROKE_RAND)    \
 	X(RADIUS_RAND)    \
 	X(ANGLE)          \
@@ -51,7 +51,7 @@ typedef struct {
 	double rotateRand;
 	double amount;
 	double distort;
-	double distortRand;
+	double distortMore;
 	double edges;
 	double edgesRand;
 	double alpha;
@@ -107,7 +107,7 @@ struct ColoredGlass : Module {
 		configParam(ROTATE_RAND_PARAM,       0.f,    1.f,         0.f,   "Angle of rotation randomness");
 		configParam(EDGES_RAND_PARAM,        0.f,    1.f,         0.6f,  "Number of edges randomess");
 		configParam(ALPHA_RAND_PARAM,        0.f,    1.f,         0.5f,  "Opacity randomness");
-		configParam(DISTORT_RAND_PARAM,      0.f,    5.f,         0.f,   "Amount of distortion randomness");
+		configParam(DISTORT_MORE_PARAM,      0.f,    5.f,         0.f,   "Amount of distortion randomness");
 		configParam(STROKE_RAND_PARAM,       0.f,    1.f,         0.f,   "Stroke width randomness");
 		configParam(RADIUS_RAND_PARAM,       0.f,    1.f,         1.f,   "Radius randomness");
 		configParam(ANGLE_PARAM,            -1.f,    1.f,         0.01f, "Rotation speed");
@@ -126,7 +126,7 @@ struct ColoredGlass : Module {
 		Settings.rotateRand  = inputs[ROTATE_RAND_INPUT].getVoltage()  / 10   + params[ROTATE_RAND_PARAM].getValue();
 		Settings.amount      = inputs[AMOUNT_INPUT].getVoltage()       + params[AMOUNT_PARAM].getValue();
 		Settings.distort     = inputs[DISTORT_INPUT].getVoltage()      / 10   + params[DISTORT_PARAM].getValue();
-		Settings.distortRand = inputs[DISTORT_RAND_INPUT].getVoltage() / 2    + params[DISTORT_RAND_PARAM].getValue();
+		Settings.distortMore  = inputs[DISTORT_MORE_INPUT].getVoltage() / 2    + params[DISTORT_MORE_PARAM].getValue();
 		Settings.edges       = inputs[EDGES_INPUT].getVoltage()        + params[EDGES_PARAM].getValue();
 		Settings.edgesRand   = inputs[EDGES_RAND_INPUT].getVoltage()   + params[EDGES_RAND_PARAM].getValue();
 		Settings.alpha       = inputs[ALPHA_INPUT].getVoltage()        * 25.5 + params[ALPHA_PARAM].getValue();
@@ -209,22 +209,23 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 	ColoredGlass *module;
 
 	int fixCoord(int c) {
-		return std::min(std::max(c, 0), halfsize << 1);
+		int width = (Settings.stroke + Settings.strokeRand * 3) / 2;
+		return std::min(std::max(c, width), (halfsize << 1) - 20);
 	}
 
 	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
 		angle = angle / 180 * NVG_PI;
 
-		double dr = Settings.distortRand;
+		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		int xx = fixCoord(x + radius * getCos(angle * (d / (dr + (1 / (dr + 1))))));
-		int yy = fixCoord(y + radius * getSin(angle * d)); 
+		int xx = fixCoord(x + radius * getCos(angle * (d / (dm + (1 / (dm + 1))))));
+		int yy = fixCoord(y + radius * getSin(angle * d));
 
 		nvgMoveTo(args.vg, xx, yy);
 
 		for (int i = 1; i < edges; i++) {
-			int nx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dr + (1 / (dr + 1))))));
+			int nx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
 			int ny = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d));
 			nvgLineTo(args.vg, nx, ny);
 		}
@@ -237,7 +238,7 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 			return;
 		}
 
-		nvgScissor(args.vg, 0, 0, 375, 378);
+		nvgMiterLimit(args.vg, 0);
 
 		for (int i = 0; i < Settings.amount; i++) {
 			nvgBeginPath(args.vg);
