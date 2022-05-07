@@ -4,7 +4,7 @@ const int PARTICLES_MAX = 5000;
 const int RADIUS_MAX = 200;
 const int halfsize = 198;
 
-#define	PARAM_MAP(X)  \
+#define PARAM_MAP(X)      \
 	X(AMOUNT)         \
 	X(ROTATE)         \
 	X(EDGES)          \
@@ -167,7 +167,7 @@ void initParticles(void) {
 		Particles[i].radius = 1 + (rand() % 50);
 		Particles[i].width = rand() % 4;
 		Particles[i].angle = 0;
-		Particles[i].alpha = rand() % 256;
+		Particles[i].alpha = 1 + rand() % 250;
 		Particles[i].edges = 1 + rand() % 5;
 		Particles[i].angle = rand() % 360;
 	}
@@ -197,10 +197,12 @@ void tick(void) {
 
 		int x = Particles[i].x + Settings.centerX;
 		int y = Particles[i].y + Settings.centerY;
+		bool outx = x < halfsize * -1 || x > halfsize;
+		bool outy = y < halfsize * -1 || y > halfsize;
 
-		if (x < halfsize * -1 || x > halfsize || y > halfsize || y < halfsize * -1) {
+		if (outx || outy) {
 			Particles[i].inverted *= -1;
-			Particles[i].vector += M_PI_2 / 10;
+			Particles[i].vector += M_PI_2 / 3;
 		}
 	}
 }
@@ -208,9 +210,9 @@ void tick(void) {
 struct ColoredGlassGlWidget : ModuleLightWidget {
 	ColoredGlass *module;
 
-	int fixCoord(int c) {
-		int width = (Settings.stroke + Settings.strokeRand * 3) / 2;
-		return std::min(std::max(c, width), (halfsize << 1) - 20);
+	float fixCoord(float c) {
+		float width = (Settings.stroke + Settings.strokeRand * 3) / 2;
+		return std::min(std::max(c, width), 400.0f) * (0.925 - width / 350) + 3;
 	}
 
 	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
@@ -219,18 +221,40 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		int xx = fixCoord(x + radius * getCos(angle * (d / (dm + (1 / (dm + 1))))));
-		int yy = fixCoord(y + radius * getSin(angle * d));
+		float xx = fixCoord(x + radius * getCos(angle * (d / (dm + (1 / (dm + 1)))))) ;
+		float yy = fixCoord(y + radius * getSin(angle * d)) + 4;
 
-		nvgMoveTo(args.vg, xx, yy);
+		int minx = xx;
+		int miny = yy;
+		int maxx = xx;
+		int maxy = yy;
+
+		int xs[edges] = {};
+		int ys[edges] = {};
+		xs[0] = xx;
+		ys[0] = yy;
 
 		for (int i = 1; i < edges; i++) {
-			int nx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
-			int ny = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d));
-			nvgLineTo(args.vg, nx, ny);
+			xs[i] = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
+			ys[i] = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d)) + 2;
+			minx = std::min(minx, xs[i]);
+			maxx = std::max(maxx, xs[i]);
+			miny = std::min(miny, ys[i]);
+			maxy = std::max(maxy, ys[i]);
+			nvgLineTo(args.vg, xs[i], ys[i]);
 		}
 
-		nvgLineTo(args.vg, xx, yy);
+		if (minx < 0 || maxx > 400 || miny < 0 || maxy > 400) {
+			return;
+		}
+
+		nvgMoveTo(args.vg, xs[0], ys[0]);
+
+		for (int i = 1; i < edges; i++) {
+			nvgLineTo(args.vg, xs[i], ys[i]);
+		}
+
+		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -304,7 +328,7 @@ struct ColoredGlassWidget : ModuleWidget {
 		{
 			ColoredGlassGlWidget *display = new ColoredGlassGlWidget();
 			display->module = module;
-			display->setSize(Vec(400, 400));
+			display->setSize(Vec(398, 398));
 			display->setPosition(Vec(434, 1));
 			addChild(display);
 		}
