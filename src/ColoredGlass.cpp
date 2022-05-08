@@ -216,45 +216,38 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 	}
 
 	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
+		float width = (Settings.stroke + Settings.strokeRand * 3) * 2;
+
 		angle = angle / 180 * NVG_PI;
 
 		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		float xx = fixCoord(x + radius * getCos(angle * (d / (dm + (1 / (dm + 1)))))) ;
-		float yy = fixCoord(y + radius * getSin(angle * d)) + 4;
+		int xf = 0;
+		int yf = 0;
 
-		int minx = xx;
-		int miny = yy;
-		int maxx = xx;
-		int maxy = yy;
+		int nodes = 0;
 
-		int xs[edges];
-		int ys[edges];
-		xs[0] = xx;
-		ys[0] = yy;
+		for (int i = 0; i < edges; i++) {
+			int xx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
+			int yy = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d)) + 2;
 
-		for (int i = 1; i < edges; i++) {
-			xs[i] = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
-			ys[i] = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d)) + 2;
-			minx = std::min(minx, xs[i]);
-			maxx = std::max(maxx, xs[i]);
-			miny = std::min(miny, ys[i]);
-			maxy = std::max(maxy, ys[i]);
-			nvgLineTo(args.vg, xs[i], ys[i]);
+			if (xx < width || xx > 376 - width || yy < width || yy > 379 - width) {
+				continue;
+			}
+
+			if (nodes++ == 0) {
+				xf = xx;
+				yf = yy;
+				nvgMoveTo(args.vg, xx, yy);
+			} else {
+				nvgLineTo(args.vg, xx, yy);
+			}
 		}
 
-		if (minx < 0 || maxx > 400 || miny < 0 || maxy > 400) {
-			return;
+		if (nodes > 1) {
+			nvgLineTo(args.vg, xf, yf);
 		}
-
-		nvgMoveTo(args.vg, xs[0], ys[0]);
-
-		for (int i = 1; i < edges; i++) {
-			nvgLineTo(args.vg, xs[i], ys[i]);
-		}
-
-		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
 	void drawLayer(const DrawArgs& args, int layer) override {
