@@ -152,11 +152,11 @@ int colorshift = 0;
 void setColors(int shift) {
 	for (int i = 0; i < Settings.amount; i++) {
 		TParticle &p = Particles[i];
-		double angle = p.vector * 5 - ((shift % 628) / 100);
+		double angle = p.vector + shift / 100;
 
-		p.red = abs(round(getCos(angle / 3) * 128 + 128));
-		p.green = round(abs(round(getSin(angle / 4) * 128 + 128)));
-		p.blue = round(abs(round(getSin(angle / 12) * 128 + 128)));
+		p.red = getSin(angle / 3) * 127 + 128;
+		p.green = getSin(angle / 4) * 127 + 128;
+		p.blue = getSin(angle / 12) * 127 + 128;
 	}
 }
 
@@ -263,9 +263,9 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 			drawParticle(args, &Particles[i]);
 			TParticle p = Particles[i];
 
-			int red = int(p.red * Settings.red / 5) % 256;
-			int green = int(p.green * Settings.green / 5) % 256;
-			int blue = int(p.blue * Settings.blue / 5) % 256;
+			int red = int(p.red * Settings.red / 5) % 127 + 128;
+			int green = int(p.green * Settings.green / 5) % 127 + 128;
+			int blue = int(p.blue * Settings.blue / 5) % 127 + 128;
 
 			nvgFillColor(args.vg, nvgRGBA(red, green, blue,
 				int(Settings.alpha + p.alpha * Settings.alphaRand)));
