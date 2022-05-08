@@ -217,11 +217,6 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		int minx = 1000;
-		int miny = 1000;
-		int maxx = -1000;
-		int maxy = -1000;
-
 		int xs[edges];
 		int ys[edges];
 		int edge = 0;
@@ -229,11 +224,6 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		for (int i = 0; i < edges; i++) {
 			int xx = x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1)))));
 			int yy = y + radius * getSin((i * PIX2 / edges + angle) * d);
-
-			minx = std::min(minx, xx);
-			maxx = std::max(maxx, xx);
-			miny = std::min(miny, yy);
-			maxy = std::max(maxy, yy);
 
 			if (xx < 6 || xx > 370 || yy < 6 || yy > 370) {
 				continue;
