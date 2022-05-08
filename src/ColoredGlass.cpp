@@ -1,6 +1,6 @@
 #include "plugin.hpp"
 
-const int PARTICLES_MAX = 5000;
+const int PARTICLES_MAX = 20000;
 const int RADIUS_MAX = 200;
 const int halfsize = 198;
 
