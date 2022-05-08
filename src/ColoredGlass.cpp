@@ -40,6 +40,8 @@ typedef struct {
 	int green;
 	int blue;
 	int alpha;
+	bool locked;
+	double distance;
 } TParticle;
 
 TParticle Particles[PARTICLES_MAX];
@@ -160,8 +162,10 @@ void setColors(int shift) {
 
 void initParticles(void) {
 	for (int i = 0; i < PARTICLES_MAX; i++) {
+		Particles[i].locked = false;
 		Particles[i].x = 0;
 		Particles[i].y = 0;
+		Particles[i].distance = 0;
 		Particles[i].inverted = 1;
 		Particles[i].vector = (double(rand() % 1000) / 1000) * PIX2;
 		Particles[i].radius = 1 + (rand() % 50);
@@ -183,94 +187,95 @@ void tick(void) {
 	setColors(colorshift++);
 
 	for (int i = 0; i < Settings.amount; i++) {
-		double r = sqrt(pow(Particles[i].x, 2) + pow(Particles[i].y, 2)) +
-			Particles[i].inverted * Settings.speed;
-
-		Particles[i].x = getCos(Particles[i].vector + Settings.rotateAll / 180 * NVG_PI) * r;
-		Particles[i].y = getSin(Particles[i].vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		TParticle *p = &Particles[i];
+		double r = p->distance + p->inverted * Settings.speed;
 
 		if (r < 0) {
-			Particles[i].inverted *= -1;
+			r = 1;
+			p->inverted *= -1;
 		}
 
-		Particles[i].vector += Settings.angle;
-
-		int x = Particles[i].x + Settings.centerX;
-		int y = Particles[i].y + Settings.centerY;
-		bool outx = x < halfsize * -1 || x > halfsize;
-		bool outy = y < halfsize * -1 || y > halfsize;
-
-		if (outx || outy) {
-			Particles[i].inverted *= -1;
-			Particles[i].vector += M_PI_2 / 3;
-		}
+		p->distance = r;
+		p->x = getCos(p->vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		p->y = getSin(p->vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		p->vector += Settings.angle / 5;
 	}
 }
 
 struct ColoredGlassGlWidget : ModuleLightWidget {
 	ColoredGlass *module;
 
-	float fixCoord(float c) {
-		float width = (Settings.stroke + Settings.strokeRand * 3) / 2;
-		return std::min(std::max(c, width), 400.0f) * (0.925 - width / 350) + 3;
-	}
-
-	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
-		float width = (Settings.stroke + Settings.strokeRand * 3) * 2;
+	void drawParticle(const DrawArgs &args, TParticle *p) {
+		int x = p->x + halfsize + Settings.centerX - 7;
+		int y = p->y + halfsize + Settings.centerY - 10;
+		int radius = std::max(0, std::min(int(Settings.radius + p->radius * Settings.radiusRand), RADIUS_MAX));
+		int edges = Settings.edges + p->edges * Settings.edgesRand;
+		float angle = Settings.rotate + p->angle * Settings.rotateRand;
 
 		angle = angle / 180 * NVG_PI;
 
 		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		int xf = 0;
-		int yf = 0;
+		int minx = 1000;
+		int miny = 1000;
+		int maxx = -1000;
+		int maxy = -1000;
 
-		int nodes = 0;
+		int xs[edges];
+		int ys[edges];
+		int edge = 0;
 
 		for (int i = 0; i < edges; i++) {
-			int xx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1))))));
-			int yy = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d)) + 2;
+			int xx = x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1)))));
+			int yy = y + radius * getSin((i * PIX2 / edges + angle) * d);
 
-			if (xx < width || xx > 376 - width || yy < width || yy > 379 - width) {
+			minx = std::min(minx, xx);
+			maxx = std::max(maxx, xx);
+			miny = std::min(miny, yy);
+			maxy = std::max(maxy, yy);
+
+			if (xx < 6 || xx > 370 || yy < 6 || yy > 370) {
 				continue;
 			}
 
-			if (nodes++ == 0) {
-				xf = xx;
-				yf = yy;
-				nvgMoveTo(args.vg, xx, yy);
-			} else {
-				nvgLineTo(args.vg, xx, yy);
-			}
+			xs[edge] = xx;
+			ys[edge++] = yy;
 		}
 
-		if (nodes > 1) {
-			nvgLineTo(args.vg, xf, yf);
+		if ((edges <= 2 && edge < 2) || (edges > 2 && edge < 3)) {
+			if (!p->locked) {
+				p->inverted *= -1;
+				p->locked = true;
+			}
+		} else {
+			p->locked = false;
 		}
+
+		nvgMoveTo(args.vg, xs[0], ys[0]);
+
+		for (int i = 1; i < edge; i++) {
+			nvgLineTo(args.vg, xs[i], ys[i]);
+		}
+
+		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
 	void drawLayer(const DrawArgs& args, int layer) override {
-		if (!module || layer != 1) return;
+		if (!module || layer != 1) {
+			return;
+		}
 
 		nvgMiterLimit(args.vg, 0);
 
 		for (int i = 0; i < Settings.amount; i++) {
 			nvgBeginPath(args.vg);
+			drawParticle(args, &Particles[i]);
 			TParticle p = Particles[i];
 
-			drawPoly(
-				args,
-				p.x + halfsize + Settings.centerX,
-				p.y + halfsize + Settings.centerY,
-				std::min(int(Settings.radius + p.radius * Settings.radiusRand), RADIUS_MAX),
-				Settings.edges + p.edges * Settings.edgesRand,
-				Settings.rotate + p.angle * Settings.rotateRand
-			);
-
-			int red = int(p.red * Settings.red/5) % 256;
-			int green = int(p.green * Settings.green/5) % 256;
-			int blue = int(p.blue * Settings.blue/5) % 256;
+			int red = int(p.red * Settings.red / 5) % 256;
+			int green = int(p.green * Settings.green / 5) % 256;
+			int blue = int(p.blue * Settings.blue / 5) % 256;
 
 			nvgFillColor(args.vg, nvgRGBA(red, green, blue,
 				int(Settings.alpha + p.alpha * Settings.alphaRand)));
