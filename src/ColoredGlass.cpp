@@ -1,10 +1,10 @@
 #include "plugin.hpp"
 
-const int PARTICLES_MAX = 5000;
+const int PARTICLES_MAX = 20000;
 const int RADIUS_MAX = 200;
 const int halfsize = 198;
 
-#define	PARAM_MAP(X)  \
+#define PARAM_MAP(X)      \
 	X(AMOUNT)         \
 	X(ROTATE)         \
 	X(EDGES)          \
@@ -16,7 +16,7 @@ const int halfsize = 198;
 	X(ROTATE_RAND)    \
 	X(EDGES_RAND)     \
 	X(ALPHA_RAND)     \
-	X(DISTORT_RAND)   \
+	X(DISTORT_MORE)   \
 	X(STROKE_RAND)    \
 	X(RADIUS_RAND)    \
 	X(ANGLE)          \
@@ -40,6 +40,8 @@ typedef struct {
 	int green;
 	int blue;
 	int alpha;
+	bool locked;
+	double distance;
 } TParticle;
 
 TParticle Particles[PARTICLES_MAX];
@@ -51,7 +53,7 @@ typedef struct {
 	double rotateRand;
 	double amount;
 	double distort;
-	double distortRand;
+	double distortMore;
 	double edges;
 	double edgesRand;
 	double alpha;
@@ -107,7 +109,7 @@ struct ColoredGlass : Module {
 		configParam(ROTATE_RAND_PARAM,       0.f,    1.f,         0.f,   "Angle of rotation randomness");
 		configParam(EDGES_RAND_PARAM,        0.f,    1.f,         0.6f,  "Number of edges randomess");
 		configParam(ALPHA_RAND_PARAM,        0.f,    1.f,         0.5f,  "Opacity randomness");
-		configParam(DISTORT_RAND_PARAM,      0.f,    5.f,         0.f,   "Amount of distortion randomness");
+		configParam(DISTORT_MORE_PARAM,      0.f,    5.f,         0.f,   "Amount of distortion randomness");
 		configParam(STROKE_RAND_PARAM,       0.f,    1.f,         0.f,   "Stroke width randomness");
 		configParam(RADIUS_RAND_PARAM,       0.f,    1.f,         1.f,   "Radius randomness");
 		configParam(ANGLE_PARAM,            -1.f,    1.f,         0.01f, "Rotation speed");
@@ -126,7 +128,7 @@ struct ColoredGlass : Module {
 		Settings.rotateRand  = inputs[ROTATE_RAND_INPUT].getVoltage()  / 10   + params[ROTATE_RAND_PARAM].getValue();
 		Settings.amount      = inputs[AMOUNT_INPUT].getVoltage()       + params[AMOUNT_PARAM].getValue();
 		Settings.distort     = inputs[DISTORT_INPUT].getVoltage()      / 10   + params[DISTORT_PARAM].getValue();
-		Settings.distortRand = inputs[DISTORT_RAND_INPUT].getVoltage() / 2    + params[DISTORT_RAND_PARAM].getValue();
+		Settings.distortMore  = inputs[DISTORT_MORE_INPUT].getVoltage() / 2    + params[DISTORT_MORE_PARAM].getValue();
 		Settings.edges       = inputs[EDGES_INPUT].getVoltage()        + params[EDGES_PARAM].getValue();
 		Settings.edgesRand   = inputs[EDGES_RAND_INPUT].getVoltage()   + params[EDGES_RAND_PARAM].getValue();
 		Settings.alpha       = inputs[ALPHA_INPUT].getVoltage()        * 25.5 + params[ALPHA_PARAM].getValue();
@@ -150,24 +152,26 @@ int colorshift = 0;
 void setColors(int shift) {
 	for (int i = 0; i < Settings.amount; i++) {
 		TParticle &p = Particles[i];
-		double angle = p.vector * 5 - ((shift % 628) / 100);
+		double angle = p.vector + shift / 100;
 
-		p.red = abs(round(getCos(angle / 3) * 128 + 128));
-		p.green = round(abs(round(getSin(angle / 4) * 128 + 128)));
-		p.blue = round(abs(round(getSin(angle / 12) * 128 + 128)));
+		p.red = getSin(angle / 3) * 255;
+		p.green = getCos(angle / 3) * 255;
+		p.blue = getSin(angle / 5) * 255;
 	}
 }
 
 void initParticles(void) {
 	for (int i = 0; i < PARTICLES_MAX; i++) {
+		Particles[i].locked = false;
 		Particles[i].x = 0;
 		Particles[i].y = 0;
+		Particles[i].distance = 0;
 		Particles[i].inverted = 1;
 		Particles[i].vector = (double(rand() % 1000) / 1000) * PIX2;
 		Particles[i].radius = 1 + (rand() % 50);
 		Particles[i].width = rand() % 4;
 		Particles[i].angle = 0;
-		Particles[i].alpha = rand() % 256;
+		Particles[i].alpha = 1 + rand() % 250;
 		Particles[i].edges = 1 + rand() % 5;
 		Particles[i].angle = rand() % 360;
 	}
@@ -183,53 +187,68 @@ void tick(void) {
 	setColors(colorshift++);
 
 	for (int i = 0; i < Settings.amount; i++) {
-		double r = sqrt(pow(Particles[i].x, 2) + pow(Particles[i].y, 2)) +
-			Particles[i].inverted * Settings.speed;
-
-		Particles[i].x = getCos(Particles[i].vector + Settings.rotateAll / 180 * NVG_PI) * r;
-		Particles[i].y = getSin(Particles[i].vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		TParticle *p = &Particles[i];
+		double r = p->distance + p->inverted * Settings.speed;
 
 		if (r < 0) {
-			Particles[i].inverted *= -1;
+			r = 1;
+			p->inverted *= -1;
 		}
 
-		Particles[i].vector += Settings.angle;
-
-		int x = Particles[i].x + Settings.centerX;
-		int y = Particles[i].y + Settings.centerY;
-
-		if (x < halfsize * -1 || x > halfsize || y > halfsize || y < halfsize * -1) {
-			Particles[i].inverted *= -1;
-			Particles[i].vector += M_PI_2 / 10;
-		}
+		p->distance = r;
+		p->x = getCos(p->vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		p->y = getSin(p->vector + Settings.rotateAll / 180 * NVG_PI) * r;
+		p->vector += Settings.angle / 5;
 	}
 }
 
 struct ColoredGlassGlWidget : ModuleLightWidget {
 	ColoredGlass *module;
 
-	int fixCoord(int c) {
-		return std::min(std::max(c, 0), halfsize << 1);
-	}
+	void drawParticle(const DrawArgs &args, TParticle *p) {
+		int x = p->x + halfsize + Settings.centerX - 7;
+		int y = p->y + halfsize + Settings.centerY - 10;
+		int radius = std::max(0, std::min(int(Settings.radius + p->radius * Settings.radiusRand), RADIUS_MAX));
+		int edges = Settings.edges + p->edges * Settings.edgesRand;
+		float angle = Settings.rotate + p->angle * Settings.rotateRand;
 
-	void drawPoly(const DrawArgs &args, int x, int y, int radius, int edges, double angle) {
 		angle = angle / 180 * NVG_PI;
 
-		double dr = Settings.distortRand;
+		double dm = Settings.distortMore;
 		double d = Settings.distort + 1;
 
-		int xx = fixCoord(x + radius * getCos(angle * (d / (dr + (1 / (dr + 1))))));
-		int yy = fixCoord(y + radius * getSin(angle * d)); 
+		int xs[edges];
+		int ys[edges];
+		int edge = 0;
 
-		nvgMoveTo(args.vg, xx, yy);
+		for (int i = 0; i < edges; i++) {
+			int xx = x + radius * getCos((i * PIX2 / edges + angle) * (d / (dm + (1 / (dm + 1)))));
+			int yy = y + radius * getSin((i * PIX2 / edges + angle) * d);
 
-		for (int i = 1; i < edges; i++) {
-			int nx = fixCoord(x + radius * getCos((i * PIX2 / edges + angle) * (d / (dr + (1 / (dr + 1))))));
-			int ny = fixCoord(y + radius * getSin((i * PIX2 / edges + angle) * d));
-			nvgLineTo(args.vg, nx, ny);
+			if (xx < 6 || xx > 370 || yy < 6 || yy > 370) {
+				continue;
+			}
+
+			xs[edge] = xx;
+			ys[edge++] = yy;
 		}
 
-		nvgLineTo(args.vg, xx, yy);
+		if ((edges <= 2 && edge < 2) || (edges > 2 && edge < 3)) {
+			if (!p->locked) {
+				p->inverted *= -1;
+				p->locked = true;
+			}
+		} else {
+			p->locked = false;
+		}
+
+		nvgMoveTo(args.vg, xs[0], ys[0]);
+
+		for (int i = 1; i < edge; i++) {
+			nvgLineTo(args.vg, xs[i], ys[i]);
+		}
+
+		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -237,24 +256,16 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 			return;
 		}
 
-		nvgScissor(args.vg, 0, 0, 375, 378);
+		nvgMiterLimit(args.vg, 0);
 
 		for (int i = 0; i < Settings.amount; i++) {
 			nvgBeginPath(args.vg);
+			drawParticle(args, &Particles[i]);
 			TParticle p = Particles[i];
 
-			drawPoly(
-				args,
-				p.x + halfsize + Settings.centerX,
-				p.y + halfsize + Settings.centerY,
-				std::min(int(Settings.radius + p.radius * Settings.radiusRand), RADIUS_MAX),
-				Settings.edges + p.edges * Settings.edgesRand,
-				Settings.rotate + p.angle * Settings.rotateRand
-			);
-
-			int red = int(p.red * Settings.red/5) % 256;
-			int green = int(p.green * Settings.green/5) % 256;
-			int blue = int(p.blue * Settings.blue/5) % 256;
+			int red = int(p.red * Settings.red / 10);
+			int green = int(p.green * Settings.green / 10);
+			int blue = int(p.blue * Settings.blue / 10);
 
 			nvgFillColor(args.vg, nvgRGBA(red, green, blue,
 				int(Settings.alpha + p.alpha * Settings.alphaRand)));
@@ -303,7 +314,7 @@ struct ColoredGlassWidget : ModuleWidget {
 		{
 			ColoredGlassGlWidget *display = new ColoredGlassGlWidget();
 			display->module = module;
-			display->setSize(Vec(400, 400));
+			display->setSize(Vec(398, 398));
 			display->setPosition(Vec(434, 1));
 			addChild(display);
 		}
