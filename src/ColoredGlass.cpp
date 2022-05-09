@@ -154,9 +154,9 @@ void setColors(int shift) {
 		TParticle &p = Particles[i];
 		double angle = p.vector + shift / 100;
 
-		p.red = getSin(angle / 3) * 255;
-		p.green = getCos(angle / 3) * 255;
-		p.blue = getSin(angle / 5) * 255;
+		p.red = getSin(angle / 2) * 127 + 128;
+		p.green = getCos(angle / 2) * 127 + 128;
+		p.blue = getSin(angle / 3) * 127 + 128;
 	}
 }
 
