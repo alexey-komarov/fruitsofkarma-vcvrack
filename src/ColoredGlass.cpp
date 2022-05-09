@@ -154,9 +154,9 @@ void setColors(int shift) {
 		TParticle &p = Particles[i];
 		double angle = p.vector + shift / 100;
 
-		p.red = getSin(angle / 3) * 127 + 128;
-		p.green = getSin(angle / 4) * 127 + 128;
-		p.blue = getSin(angle / 12) * 127 + 128;
+		p.red = getSin(angle / 3) * 255;
+		p.green = getCos(angle / 3) * 255;
+		p.blue = getSin(angle / 5) * 255;
 	}
 }
 
@@ -251,8 +251,8 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
-	void drawLayer(const DrawArgs& args, int layer) override {
-		if (!module || layer != 1) {
+	void draw(const DrawArgs &args) override {
+		if (module == NULL) {
 			return;
 		}
 
@@ -263,9 +263,9 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 			drawParticle(args, &Particles[i]);
 			TParticle p = Particles[i];
 
-			int red = int(p.red * Settings.red / 5) % 127 + 128;
-			int green = int(p.green * Settings.green / 5) % 127 + 128;
-			int blue = int(p.blue * Settings.blue / 5) % 127 + 128;
+			int red = int(p.red * Settings.red / 10);
+			int green = int(p.green * Settings.green / 10);
+			int blue = int(p.blue * Settings.blue / 10);
 
 			nvgFillColor(args.vg, nvgRGBA(red, green, blue,
 				int(Settings.alpha + p.alpha * Settings.alphaRand)));
@@ -280,7 +280,6 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		}
 
 		tick();
-		Widget::drawLayer(args, layer);
 	}
 };
 
