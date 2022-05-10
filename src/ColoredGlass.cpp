@@ -26,6 +26,7 @@ const int halfsize = 198;
 	X(RED)            \
 	X(GREEN)          \
 	X(BLUE)           \
+	X(RESET)          \
 
 typedef struct {
 	double x;
@@ -71,6 +72,39 @@ typedef struct {
 } TSettings;
 
 TSettings Settings;
+
+const double PIX2 = M_PI * 2;
+int colorshift = 0;
+
+void setColors(int shift) {
+	for (int i = 0; i < Settings.amount; i++) {
+		TParticle &p = Particles[i];
+		double angle = p.vector + shift / 100;
+
+		p.red = getSin(angle / 2) * 127 + 128;
+		p.green = getCos(angle / 2) * 127 + 128;
+		p.blue = getSin(angle / 3) * 127 + 128;
+	}
+}
+
+void initParticles(void) {
+	for (int i = 0; i < PARTICLES_MAX; i++) {
+		Particles[i].locked = false;
+		Particles[i].x = 0;
+		Particles[i].y = 0;
+		Particles[i].distance = 0;
+		Particles[i].inverted = 1;
+		Particles[i].vector = (double(rand() % 1000) / 1000) * PIX2;
+		Particles[i].radius = 1 + (rand() % 50);
+		Particles[i].width = rand() % 4;
+		Particles[i].angle = 0;
+		Particles[i].alpha = 1 + rand() % 250;
+		Particles[i].edges = 1 + rand() % 5;
+		Particles[i].angle = rand() % 360;
+	}
+
+	setColors(0);
+}
 
 struct ColoredGlass : Module {
 #define	PARAM_EXPAND(enum_name) enum_name##_PARAM,
@@ -122,13 +156,17 @@ struct ColoredGlass : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage() > 0.f) {
+			initParticles();
+		}
+
 		Settings.angle       = inputs[ANGLE_INPUT].getVoltage()        / 10   + params[ANGLE_PARAM].getValue();
 		Settings.rotateAll   = inputs[ROTATE_ALL_INPUT].getVoltage()   * 18   + params[ROTATE_ALL_PARAM].getValue();
 		Settings.rotate      = inputs[ROTATE_INPUT].getVoltage()       * 18   + params[ROTATE_PARAM].getValue();
 		Settings.rotateRand  = inputs[ROTATE_RAND_INPUT].getVoltage()  / 10   + params[ROTATE_RAND_PARAM].getValue();
 		Settings.amount      = inputs[AMOUNT_INPUT].getVoltage()       + params[AMOUNT_PARAM].getValue();
 		Settings.distort     = inputs[DISTORT_INPUT].getVoltage()      / 10   + params[DISTORT_PARAM].getValue();
-		Settings.distortMore  = inputs[DISTORT_MORE_INPUT].getVoltage() / 2    + params[DISTORT_MORE_PARAM].getValue();
+		Settings.distortMore = inputs[DISTORT_MORE_INPUT].getVoltage() / 2    + params[DISTORT_MORE_PARAM].getValue();
 		Settings.edges       = inputs[EDGES_INPUT].getVoltage()        + params[EDGES_PARAM].getValue();
 		Settings.edgesRand   = inputs[EDGES_RAND_INPUT].getVoltage()   + params[EDGES_RAND_PARAM].getValue();
 		Settings.alpha       = inputs[ALPHA_INPUT].getVoltage()        * 25.5 + params[ALPHA_PARAM].getValue();
@@ -145,39 +183,6 @@ struct ColoredGlass : Module {
 		Settings.blue        = inputs[BLUE_INPUT].getVoltage()         + params[BLUE_PARAM].getValue();
 	}
 };
-
-const double PIX2 = M_PI * 2;
-int colorshift = 0;
-
-void setColors(int shift) {
-	for (int i = 0; i < Settings.amount; i++) {
-		TParticle &p = Particles[i];
-		double angle = p.vector + shift / 100;
-
-		p.red = getSin(angle / 2) * 127 + 128;
-		p.green = getCos(angle / 2) * 127 + 128;
-		p.blue = getSin(angle / 3) * 127 + 128;
-	}
-}
-
-void initParticles(void) {
-	for (int i = 0; i < PARTICLES_MAX; i++) {
-		Particles[i].locked = false;
-		Particles[i].x = 0;
-		Particles[i].y = 0;
-		Particles[i].distance = 0;
-		Particles[i].inverted = 1;
-		Particles[i].vector = (double(rand() % 1000) / 1000) * PIX2;
-		Particles[i].radius = 1 + (rand() % 50);
-		Particles[i].width = rand() % 4;
-		Particles[i].angle = 0;
-		Particles[i].alpha = 1 + rand() % 250;
-		Particles[i].edges = 1 + rand() % 5;
-		Particles[i].angle = rand() % 360;
-	}
-
-	setColors(0);
-}
 
 double getRadius(TParticle p) {
 	return std::min(int(Settings.radius + p.radius * Settings.radiusRand), RADIUS_MAX);
@@ -294,7 +299,7 @@ struct ColoredGlassWidget : ModuleWidget {
 		const int yi = 34;
 		const int size = 49;
 
-		for (int i = 0; i < ColoredGlass::NUM_PARAMS; i++) {
+		for (int i = 0; i < ColoredGlass::NUM_PARAMS - 1; i++) {
 			int xps = xp;
 			int xis = xi;
 
@@ -309,6 +314,9 @@ struct ColoredGlassWidget : ModuleWidget {
 			addParam(createParam<RoundBlackKnob>(Vec(xps, yp + (i % 7) * size), module, i));
 			addInput(createInput<PJ301MPort>    (Vec(xis, yi + (i % 7) * size), module, i));
 		}
+
+		addParam(createParam<LEDButton>(Vec(377, 353), module, ColoredGlass::RESET_PARAM));
+		addInput(createInput<PJ301MPort>(Vec(400, 350), module, ColoredGlass::RESET_INPUT));
 
 		initParticles();
 
