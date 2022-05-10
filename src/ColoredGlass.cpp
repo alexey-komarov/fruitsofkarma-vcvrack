@@ -154,10 +154,9 @@ void setColors(int shift) {
 		TParticle &p = Particles[i];
 		double angle = p.vector + shift / 100;
 
-		p.red = getSin(angle / 3) * 255;
-		printf("%d\n", p.red);
-		p.green = getCos(angle / 3) * 255;
-		p.blue = getSin(angle / 5) * 255;
+		p.red = getSin(angle / 2) * 127 + 128;
+		p.green = getCos(angle / 2) * 127 + 128;
+		p.blue = getSin(angle / 3) * 127 + 128;
 	}
 }
 
@@ -252,8 +251,8 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		nvgLineTo(args.vg, xs[0], ys[0]);
 	}
 
-	void draw(const DrawArgs &args) override {
-		if (module == NULL) {
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (!module || layer != 1) {
 			return;
 		}
 
@@ -281,6 +280,7 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 		}
 
 		tick();
+		Widget::drawLayer(args, layer);
 	}
 };
 
