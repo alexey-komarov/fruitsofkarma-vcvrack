@@ -46,6 +46,7 @@ typedef struct {
 } TParticle;
 
 TParticle Particles[PARTICLES_MAX];
+TParticle ParticlesCopy[PARTICLES_MAX];
 
 typedef struct {
 	double angle;
@@ -104,6 +105,7 @@ void initParticles(void) {
 	}
 
 	setColors(0);
+	memcpy(&ParticlesCopy, &Particles, sizeof(Particles));
 }
 
 struct ColoredGlass : Module {
@@ -128,6 +130,8 @@ struct ColoredGlass : Module {
 	enum LightIds {
 		NUM_LIGHTS
 	};
+
+	bool Reset = false;
 
 	ColoredGlass() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -157,7 +161,7 @@ struct ColoredGlass : Module {
 
 	void process(const ProcessArgs& args) override {
 		if (params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage() > 0.f) {
-			initParticles();
+			Reset = true;
 		}
 
 		Settings.angle       = inputs[ANGLE_INPUT].getVoltage()        / 10   + params[ANGLE_PARAM].getValue();
@@ -211,6 +215,11 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 	ColoredGlass *module;
 
 	void drawParticle(const DrawArgs &args, TParticle *p) {
+		if (module->Reset) {
+			memcpy(&Particles, &ParticlesCopy, sizeof(Particles));
+			module->Reset = false;
+		}
+
 		int x = p->x + halfsize + Settings.centerX - 7;
 		int y = p->y + halfsize + Settings.centerY - 10;
 		int radius = std::max(0, std::min(int(Settings.radius + p->radius * Settings.radiusRand), RADIUS_MAX));
