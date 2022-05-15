@@ -157,7 +157,6 @@ struct ColoredGlass : Module {
 		configParam(RED_PARAM,             -10.f,   10.f,         -9.f,  "Red color shift");
 		configParam(GREEN_PARAM,           -10.f,   10.f,         1.9f,  "Green color shift");
 		configParam(BLUE_PARAM,            -10.f,   10.f,         2.14f, "Blue color shift");
-		configButton(RESET_PARAM, "Reset");
 	}
 
 	void process(const ProcessArgs& args) override {
