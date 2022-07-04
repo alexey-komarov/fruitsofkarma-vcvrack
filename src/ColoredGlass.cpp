@@ -220,10 +220,15 @@ struct ColoredGlassGlWidget : ModuleLightWidget {
 			module->Reset = false;
 		}
 
+		int edges = Settings.edges + p->edges * Settings.edgesRand;
+
+		if (edges <= 0) {
+			return;
+		}
+
 		int x = p->x + halfsize + Settings.centerX - 7;
 		int y = p->y + halfsize + Settings.centerY - 10;
 		int radius = std::max(0, std::min(int(Settings.radius + p->radius * Settings.radiusRand), RADIUS_MAX));
-		int edges = Settings.edges + p->edges * Settings.edgesRand;
 		float angle = Settings.rotate + p->angle * Settings.rotateRand;
 
 		angle = angle / 180 * NVG_PI;
