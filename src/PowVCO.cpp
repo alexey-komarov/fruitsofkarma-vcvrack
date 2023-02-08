@@ -187,8 +187,9 @@ struct PowVCODisplay : ModuleLightWidget {
 	}
 
 	void draw (const DrawArgs &args) override {
-		if(module == NULL) 
+		if (module == NULL) {
 			return;
+		}
 
 		bool envMode = module->params[PowVCO::ENV_PARAM].getValue() == 1;
 		bool clipMode = module->params[PowVCO::CLIP_PARAM].getValue() == 1;

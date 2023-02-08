@@ -8,3 +8,4 @@ extern Model* modelQuadro360;
 extern Model* modelColoredGlass;
 extern Model* modelPowVCO;
 extern Model* modelMath;
+extern Model* modelScaleMerger;

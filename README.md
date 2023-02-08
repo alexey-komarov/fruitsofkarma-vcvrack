@@ -50,3 +50,13 @@ Parameters:
 - X, Y - Center coordinates
 - Speed - speed of particles
 - Red, Green, Blue: shift color components
+
+## ScaleMerger
+
+![ScaleMerger](./doc/ScaleMerger.gif)
+
+Probability quantizer with two scales with option to transit between one to another via their common pitches.
+
+- Use the small knobs to adjust the chance of each individual pitch in the selected scale.
+- The large probability knobs control the chance of unique pitches in the selected scale.
+- To switch between scales, turn both large probability knobs all the way down. This will give you only the common pitches in the new scale. Rotating a large probability knob will activate only pitches from the related scale, but won't change the result scale while the related knob is set to 0.
