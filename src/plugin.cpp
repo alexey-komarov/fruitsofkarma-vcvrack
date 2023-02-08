@@ -9,4 +9,5 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPowVCO);
 	p->addModel(modelMath);
 	p->addModel(modelColoredGlass);
+	p->addModel(modelScaleMerger);
 }

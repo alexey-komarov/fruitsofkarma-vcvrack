@@ -4,7 +4,7 @@ struct Quadro360 : Module {
 	enum ParamIds {
 		ANGLE_PARAM,
 		RADIUS_IN_PARAM,
-		RADIUS_OUT_PARAM,  
+		RADIUS_OUT_PARAM,
 		NUM_PARAMS
 	};
 
