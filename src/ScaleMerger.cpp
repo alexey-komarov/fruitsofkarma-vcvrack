@@ -589,8 +589,8 @@ struct ScaleMergerWidget : ModuleWidget {
 				this->module = module;
 			}
 
-			void draw(const DrawArgs &args) override {
-				if (this->module == NULL) {
+			void drawLayer(const DrawArgs& args, int layer) override {
+				if (this->module == NULL || layer == -1) {
 					return;
 				}
 
@@ -600,6 +600,7 @@ struct ScaleMergerWidget : ModuleWidget {
 				nvgTextLetterSpacing(args.vg, 0);
 				nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
 				nvgText(args.vg, 1, 1, module->getScaleName(scaleId), NULL);
+				Widget::drawLayer(args, layer);
 			}
 		};
 
