@@ -220,6 +220,13 @@ struct ScaleMerger : Module {
 		return f1 > f2 ? f1 : f2;
 	}
 
+	float getProb(int probParam, int probInput) {
+		float v = inputs[probInput].isConnected() ?
+			inputs[probInput].getVoltage() : 0;
+
+		return max(min(params[probParam].getValue() + v, 1), 0);
+	}
+
 	void process(const ProcessArgs& args) override {
 		int trigChans = 0;
 		bool triggers[MAX_CHANS] = {false};
@@ -370,22 +377,23 @@ struct ScaleMerger : Module {
 
 			scaleResPitches[i] = scale1Pitches[i] && scale2Pitches[i];
 
-			probs1[i] = std::abs(max(min(
-				params[SCALE1_PITCH_PROB_PARAM + i].getValue() +
-				inputs[SCALE1_PITCH_PROB_INPUT + i].getVoltage(), 1), 0
-			));
+			probs1[i] = getProb(SCALE1_PITCH_PROB_PARAM + i,
+				SCALE1_PITCH_PROB_INPUT + i);
 
-			probs2[i] = std::abs(max(min(
+			probs2[i] = getProb(SCALE2_PITCH_PROB_PARAM + i,
+				SCALE2_PITCH_PROB_INPUT + i);
+
+			probs2[i] = max(min(
 				params[SCALE2_PITCH_PROB_PARAM + i].getValue() +
 				inputs[SCALE2_PITCH_PROB_INPUT + i].getVoltage(), 1), 0
-			));
-
-			if (scale2PitchesOnly[i]) {
-				probs2[i] *= params[SCALE2_PROB_PARAM].getValue();
-			}
+			);
 
 			if (scale1PitchesOnly[i]) {
-				probs1[i] *= params[SCALE1_PROB_PARAM].getValue();
+				probs1[i] *= getProb(SCALE1_PROB_PARAM, SCALE1_PROB_INPUT);
+			}
+
+			if (scale2PitchesOnly[i]) {
+				probs2[i] *= getProb(SCALE2_PROB_PARAM, SCALE2_PROB_INPUT);
 			}
 
 			probs[i] = max(probs1[i], probs2[i]);
