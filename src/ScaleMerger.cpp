@@ -588,17 +588,21 @@ struct ScaleMergerWidget : ModuleWidget {
 		struct ScaleDisplay : TransparentWidget {
 			ScaleMerger::ScaleId scaleId;
 			ScaleMerger *module;
-			std::shared_ptr<Font> font;
+			const char *fontPath = "res/fonts/DejaVuSansMono.ttf";
 
-			ScaleDisplay(std::shared_ptr<Font> font, ScaleMerger* module,
-			             ScaleMerger::ScaleId scaleId) {
-				this->font = font;
+			ScaleDisplay(ScaleMerger* module, ScaleMerger::ScaleId scaleId) {
 				this->scaleId = scaleId;
 				this->module = module;
 			}
 
 			void drawLayer(const DrawArgs& args, int layer) override {
 				if (this->module == NULL || layer == -1) {
+					return;
+				}
+
+				std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+
+				if (!font) {
 					return;
 				}
 
@@ -613,19 +617,15 @@ struct ScaleMergerWidget : ModuleWidget {
 		};
 
 		{
-			std::shared_ptr<Font> fnt = APP->window->loadFont(
-				asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf")
-			);
-
 			ScaleDisplay *scaleDisplay1 =
-				new ScaleDisplay(fnt, module, ScaleMerger::SCALE1);
+				new ScaleDisplay(module, ScaleMerger::SCALE1);
 
 			scaleDisplay1->box.pos = Vec(73, 42);
 			scaleDisplay1->box.size = Vec(120, 10);
 			addChild(scaleDisplay1);
 
 			ScaleDisplay *scaleDisplay2 =
-				new ScaleDisplay(fnt, module, ScaleMerger::SCALE2);
+				new ScaleDisplay(module, ScaleMerger::SCALE2);
 
 			scaleDisplay2->box.pos = Vec(73, 230);
 			scaleDisplay2->box.size = Vec(120, 10);
