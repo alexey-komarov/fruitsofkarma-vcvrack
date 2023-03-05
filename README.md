@@ -61,4 +61,4 @@ Probability quantizer with two scales with option to transit between one to anot
 - The large probability knobs control the chance of unique pitches in the selected scale.
 - To switch between scales, turn both large probability knobs all the way down. This will give you only the common pitches in the new scale. Rotating a large probability knob will activate only pitches from the related scale, but won't change the result scale while the related knob is set to 0.
 
-Demo: https://yot.be/9zSbBmtnPxM
+Demo: https://youtu.be/9zSbBmtnPxM
