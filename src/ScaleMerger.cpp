@@ -439,8 +439,8 @@ struct ScaleMerger : Module {
 				}
 
 				if (result == -1) {
-					outputs[PITCH_OUTPUT].setVoltage(0, i);
-					prevPitches[i] = 0;
+					outputs[PITCH_OUTPUT].setVoltage(prevPitches[i], i);
+					continue;
 				}
 
 				float v = inputs[PITCH_INPUT].getPolyVoltage(i);
