@@ -10,4 +10,5 @@ void init(rack::Plugin *p) {
 	p->addModel(modelMath);
 	p->addModel(modelColoredGlass);
 	p->addModel(modelScaleMerger);
+	p->addModel(modelCellularAuto);
 }
