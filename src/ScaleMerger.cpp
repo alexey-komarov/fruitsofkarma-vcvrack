@@ -600,7 +600,10 @@ struct ScaleMergerWidget : ModuleWidget {
 					return;
 				}
 
-				std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+				std::shared_ptr<Font> font = APP->window->loadFont(
+					asset::plugin(pluginInstance,
+					"res/fonts/DejaVuSansMono.ttf")
+				);
 
 				if (!font) {
 					return;
