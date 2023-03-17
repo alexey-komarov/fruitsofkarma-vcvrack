@@ -9,3 +9,4 @@ extern Model* modelColoredGlass;
 extern Model* modelPowVCO;
 extern Model* modelMath;
 extern Model* modelScaleMerger;
+extern Model* modelCellularAuto;
