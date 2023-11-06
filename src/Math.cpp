@@ -101,7 +101,7 @@ struct Math : Module {
 						if (k == 0) {
 							outputs[LN1_OUTPUT + j].setVoltage(std::log(a), c);
 						} else if (k == 1) {
-							outputs[LOG21_OUTPUT].setVoltage(std::log2(a), c);
+							outputs[LOG21_OUTPUT + j].setVoltage(std::log2(a), c);
 						} else if (k == 2) {
 							outputs[LOG101_OUTPUT + j].setVoltage(std::log10(a), c);
 						}
